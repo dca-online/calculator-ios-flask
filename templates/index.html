@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculator iOS</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}"/>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='icon.png') }}">
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <style>
+        .status-bar {
+            position: relative;
+            padding: 10px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            height: auto;
+            min-height: 55px;
+        }
+        
+        .time-section {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            margin-left: 0;
+        }
+        
+        #time {
+            display: block;
+            margin-bottom: 15px;
+            align-self: center;
+        }
+        
+        #history-btn {
+            display: inline-block;
+            text-decoration: none;
+            font-family: -apple-system, SF Pro Text, SF Pro Icons, Helvetica Neue, Helvetica, Arial, sans-serif;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 500;
+            padding: 3px 8px;
+            background-color: rgba(60, 60, 67, 0.33);
+            border-radius: 14px;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 0.5px solid rgba(255, 255, 255, 0.2);
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            margin-left: -12px;
+            margin-top: 15px;
+        }
+        
+        #history-btn::before {
+            content: "🕒 ";
+            font-size: 11px;
+            vertical-align: middle;
+        }
+        
+        .dark-mode #history-btn {
+            background-color: rgba(142, 142, 147, 0.3);
+            border: 0.5px solid rgba(84, 84, 88, 0.65);
+        }
+        
+        #history-btn:active {
+            transform: scale(0.96);
+            opacity: 0.8;
+        }
+        
+        .battery-theme-section {
+            display: flex;
+            align-items: center;
+        }
+    </style>
+</head>
+<body class="{% if darkMode %}dark-mode{% endif %}">
+    <div class="iphone">
+        <div class="power-button"></div>
+        <div class="volume-buttons"></div>
+        <div class="screen">
+            <div class="notch"></div>
+            <div class="status-bar">
+                <div class="time-section">
+                    <span id="time">{{ time }}</span>
+                    <a href="{{ url_for('istoric') }}" id="history-btn">Istoric</a>
+                </div>
+                <div class="battery-theme-section">
+                    <div class="theme-toggle">
+                        <a href="{{ url_for('schimbaTema') }}"></a>
+                    </div>
+                    <span class="battery">100%</span>
+                </div>
+            </div>
+            <div class="calculator">
+                <div class="mini-display">{{ miniDisplay }}</div>
+                <div class="display">{{ display }}</div>
+                <form method="post">
+                    <div class="buttons">
+                        <button type="submit" name="input" value="AC" class="btn btn-clear">AC</button>
+                        <button type="submit" name="input" value="+/-" class="btn btn-sign">+/-</button>
+                        <button type="submit" name="input" value="%" class="btn btn-percent">%</button>
+                        <button type="submit" name="input" value="÷" class="btn btn-operator">÷</button>
+                        <button type="submit" name="input" value="7" class="btn btn-light">7</button>
+                        <button type="submit" name="input" value="8" class="btn btn-light">8</button>
+                        <button type="submit" name="input" value="9" class="btn btn-light">9</button>
+                        <button type="submit" name="input" value="×" class="btn btn-operator">×</button>
+                        <button type="submit" name="input" value="4" class="btn btn-light">4</button>
+                        <button type="submit" name="input" value="5" class="btn btn-light">5</button>
+                        <button type="submit" name="input" value="6" class="btn btn-light">6</button>
+                        <button type="submit" name="input" value="-" class="btn btn-operator">-</button>
+                        <button type="submit" name="input" value="1" class="btn btn-light">1</button>
+                        <button type="submit" name="input" value="2" class="btn btn-light">2</button>
+                        <button type="submit" name="input" value="3" class="btn btn-light">3</button>
+                        <button type="submit" name="input" value="+" class="btn btn-operator">+</button>
+                        <button type="submit" name="input" value="0" class="btn btn-light" style="grid-column: span 2;">0</button>
+                        <button type="submit" name="input" value="." class="btn btn-light">.</button>
+                        <button type="submit" name="input" value="=" class="btn btn-equal">=</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script>
+        function updateTime() {
+            const now = new Date();
+            const options = { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Europe/Bucharest' };
+            const timeString = new Intl.DateTimeFormat('en-GB', options).format(now);
+            document.getElementById('time').textContent = timeString;
+        }
+        setInterval(updateTime, 1000);
+        updateTime(); // Actualizează imediat timpul
+    </script>
+</body>
+</html>

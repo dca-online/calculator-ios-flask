@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Istoric</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}"/>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='icon.png') }}">
+    <style>
+        @keyframes slideDown {
+            0% {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+            70% {
+                transform: translateY(2%);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes slideUp {
+            0% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes fadeOut {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(-5px); }
+        }
+        
+        .page-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            animation: slideDown 0.4s cubic-bezier(0.17, 0.67, 0.21, 1.07) forwards;
+            transform-origin: top center;
+            will-change: transform, opacity;
+        }
+        
+        .page-container.slide-up {
+            animation: slideUp 0.3s cubic-bezier(0.17, 0.67, 0.21, 1.0) forwards;
+        }
+        
+        .history-item.fade-out {
+            animation: fadeOut 0.2s ease-out forwards;
+            animation-delay: calc(0.05s * (var(--total-items, 10) - var(--item-index, 0)));
+        }
+        
+        .screen-content {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .ios-btn {
+            font-family: -apple-system, SF Pro Text, SF Pro Icons, Helvetica Neue, Helvetica, Arial, sans-serif;
+            font-weight: 500;
+        }
+        
+        .history-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: 10;
+        }
+        
+        .history-header h3 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 18px;
+        }
+        
+        .ios-btn {
+            font-family: -apple-system, SF Pro Text, SF Pro Icons, Helvetica Neue, Helvetica, Arial, sans-serif;
+            font-weight: 500;
+            color: #007aff;
+            text-decoration: none;
+            font-size: 16px;
+        }
+        
+        .dark-mode .ios-btn {
+            color: #0a84ff;
+        }
+        
+        .ios-btn:active {
+            opacity: 0.7;
+        }
+        
+        .dark-mode .history-header {
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .history-list-container {
+            padding: 0;
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            perspective: 1000px;
+        }
+        
+        #history-list {
+            padding: 0;
+            margin: 0;
+        }
+        
+        .history-item {
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            transition: background-color 0.2s ease;
+            animation: fadeIn 0.3s ease-out forwards;
+            animation-delay: calc(0.15s + (var(--item-index, 0) * 0.05s));
+            opacity: 0;
+            transform-origin: top center;
+            will-change: opacity, transform;
+        }
+        
+        .dark-mode .history-item {
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .calculation {
+            display: block;
+            text-decoration: none;
+            padding: 16px 20px;
+            font-size: 22px;
+            font-weight: 400;
+            color: #000;
+            text-align: right;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .dark-mode .calculation {
+            color: #fff;
+        }
+        
+        .history-item:active {
+            background-color: rgba(0,0,0,0.05);
+        }
+        
+        .dark-mode .history-item:active {
+            background-color: rgba(255,255,255,0.05);
+        }
+        
+        /* Stil pt istoric gol */
+        .empty-history {
+            animation: fadeIn 0.4s ease-out forwards;
+            animation-delay: 0.15s;
+            opacity: 0;
+        }
+        
+        /* Ascunde bara de scorll daca nu e istoric */
+        .empty-history {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #8e8e93;
+            font-size: 18px;
+            padding: 20px;
+            text-align: center;
+            overflow: hidden;
+        }
+        
+        /* Forteaza sa nu fie scrollbar daca istoricul e gol */
+        .history-list-container:has(.empty-history) {
+            overflow: hidden;
+        }
+        
+        .empty-history-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            opacity: 0.6;
+        }
+    </style>
+</head>
+<body class="{% if darkMode %}dark-mode{% endif %}">
+    <div class="iphone">
+        <div class="power-button"></div>
+        <div class="volume-buttons"></div>
+        <div class="screen">
+            <div class="notch"></div>
+            <div class="status-bar">
+                <span id="time"></span>
+                <div class="theme-toggle">
+                    <a href="{{ url_for('schimbaTema') }}"></a>
+                </div>
+                <span class="battery">100%</span>
+            </div>
+            <div class="page-container">
+                <div class="history-header">
+                    <a href="{{ back_url }}" class="ios-btn">Înapoi</a>
+                    <h3>Istoric</h3>
+                    <a href="{{ url_for('goleste_istoric') }}" class="ios-btn" id="clear-btn">Șterge</a>
+                </div>
+                <div class="screen-content">
+                    <div class="history-list-container">
+                        {% if history|length > 0 %}
+                            <ul id="history-list">
+                                {% for item in history %}
+                                    <li class="history-item">
+                                        <a href="{{ url_for('folosesteDinIstoric', index=loop.index0) }}" class="calculation">{{ item }}</a>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <div class="empty-history">
+                                <div class="empty-history-icon">📋</div>
+                                <p>Nu există istoric</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function updateTime() {
+            const now = new Date();
+            const options = { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Europe/Bucharest' };
+            const timeString = new Intl.DateTimeFormat('en-GB', options).format(now);
+            document.getElementById('time').textContent = timeString;
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const historyItems = document.querySelectorAll('.history-item');
+            historyItems.forEach((item, index) => {
+                item.style.setProperty('--item-index', index);
+            });
+            historyItems.forEach(item => {
+                item.style.setProperty('--total-items', historyItems.length);
+            });
+            setTimeout(function() {
+                document.querySelector('.page-container').classList.add('animate-in');
+            }, 10);
+            const backBtn = document.querySelector('.history-header .ios-btn');
+            const backUrl = backBtn.getAttribute('href');
+            
+            backBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Animatie istoric deschis
+                const pageContainer = document.querySelector('.page-container');
+                pageContainer.classList.add('slide-up');
+                
+                // Animatie istoric inchis
+                historyItems.forEach(item => {
+                    item.classList.add('fade-out');
+                });
+                
+                // Da inapoi la index dupa ce se termina animatia
+                setTimeout(function() {
+                    window.location.href = backUrl;
+                }, 300);
+            });
+            var clearBtn = document.getElementById('clear-btn');
+            var historyList = document.getElementById('history-list');
+            
+            if (!historyList || historyList.children.length === 0) {
+                clearBtn.style.opacity = '0.5';
+                clearBtn.style.pointerEvents = 'none';
+            }
+            
+            clearBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Da call la api sa goleasca istoricul
+                // !!! AJAX ajuta sa nu se dea refresh la toata pagina
+                fetch('{{ url_for("goleste_istoric_ajax") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }).then(function(response) {
+                    if (response.ok) {
+                        var historyContainer = document.querySelector('.history-list-container');
+                        historyContainer.innerHTML = `
+                            <div class="empty-history">
+                                <div class="empty-history-icon">📋</div>
+                                <p>Nu există istoric</p>
+                            </div>
+                        `;
+                        clearBtn.style.opacity = '0.5';
+                        clearBtn.style.pointerEvents = 'none';
+                        
+                        // Pt pastrat istoric deschis dupa delete
+                    } else {
+                        clearBtn.click();
+                    }
+                }).catch(function(error) {
+                    console.log('Error clearing history:', error);
+                });
+            });
+        });
+    </script>
+</body>
+</html> 
